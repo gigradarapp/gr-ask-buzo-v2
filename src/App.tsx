@@ -22,7 +22,7 @@ import {
 import { events as eventCandidates, landingPillars, quickPrompts, spotlightNights, type BuzoEvent } from './data'
 import { type NightPlan, type PlannerResult, type PlanStop } from './planner'
 
-const defaultPlaceholder = 'ask buzo...'
+const defaultPlaceholder = 'Chat with BUZO...'
 
 type Commitment = 'none' | 'interested' | 'going'
 type OpenAIHealth = 'checking' | 'healthy' | 'missing-key' | 'error'

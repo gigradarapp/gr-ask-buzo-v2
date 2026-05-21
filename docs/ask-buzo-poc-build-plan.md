@@ -115,10 +115,10 @@ Current backend shape:
   - event summaries
   - returns `reply`, `suggestedEventId`, `locationQuery`
 - The current LLM system prompt asks Buzo to recommend exactly one best-match event.
-- `events.list` and `events.byId` read Turso first, with Supabase fallback.
+- `events.list` and `events.byId` read Turso only; Supabase `public.events` is legacy and dropped by migration.
 - `plan.upcoming`, `plan.past`, and `feed.get` currently return empty placeholders because the old social/RSVP tables were removed.
 - North-star data model recommends `user_event_plans` as the replacement persistence model for Interested / Going / Attended plan state.
-- Turso `events` has the right event fields for the POC mental model: title, venue, district, event time, genre, category, city, verified score, image, host prompt, friends going, vibe tags, ticket price, reward/buzz, and optional coordinates.
+- Turso `events` has the current ingest fields for the POC mental model: title, location/address, event time, experience/recommendation copy, category, host/platform, price/currency, source/image URLs, coordinates, ingestion date, and a temporary `location_city_id = 'singapore'` compatibility value.
 
 Important backend implication:
 
@@ -297,7 +297,7 @@ Plan output sections:
    - Venue and district.
    - Time.
    - Price.
-   - Genre/vibe tags.
+   - Genre/taste tags.
    - Verification score.
    - Friends/social signal.
 
