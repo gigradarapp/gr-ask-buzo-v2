@@ -21,18 +21,16 @@ import {
 } from 'lucide-react'
 import { events as eventCandidates, landingPillars, quickPrompts, spotlightNights, type BuzoEvent } from './data'
 import { type NightPlan, type PlannerResult, type PlanStop } from './planner'
-
-const defaultPlaceholder = 'Chat with BUZO...'
+import {
+  ASK_BUZO_DEFAULT_PLACEHOLDER,
+  ASK_BUZO_FALLBACK_IMAGE,
+  ASK_BUZO_JOURNEY_STEPS,
+  ASK_BUZO_MODEL_OPTIONS,
+  type AskBuzoJourneyKey as JourneyKey,
+} from './config/app'
 
 type Commitment = 'none' | 'interested' | 'going'
 type OpenAIHealth = 'checking' | 'healthy' | 'missing-key' | 'error'
-type ModelOption = {
-  id: string
-  label: string
-  hint: string
-}
-
-type JourneyKey = 'area' | 'budget' | 'vibe' | 'crew'
 type JourneyAnswers = Partial<Record<JourneyKey, string>>
 
 type LivePlanPayload = {
@@ -64,48 +62,6 @@ type LivePlannerResult =
       quickReplies: string[]
       plan: LivePlanPayload
     }
-
-const modelOptions: ModelOption[] = [
-  { id: 'gpt-4.1-mini', label: '4.1 Mini', hint: 'Fast' },
-  { id: 'gpt-4.1', label: '4.1', hint: 'Balanced' },
-  { id: 'gpt-5.2', label: '5.2', hint: 'Smart' },
-  { id: 'gpt-5.2-mini', label: '5.2 Mini', hint: 'Fast smart' },
-]
-
-const journeySteps: Array<{
-  key: JourneyKey
-  eyebrow: string
-  title: string
-  options: string[]
-}> = [
-  {
-    key: 'area',
-    eyebrow: 'Step 1',
-    title: 'Where do you want to go?',
-    options: ['Central Singapore', 'Marina Bay', 'Tiong Bahru', 'Bugis', 'Jalan Besar', 'Surprise me'],
-  },
-  {
-    key: 'budget',
-    eyebrow: 'Step 2',
-    title: 'How much should the night cost?',
-    options: ['Under $30', 'Under $50', 'Under $80', 'Flexible if worth it'],
-  },
-  {
-    key: 'vibe',
-    eyebrow: 'Step 3',
-    title: 'What kind of energy do you want?',
-    options: ['Low-key music', 'Date night', 'Dance later', 'Hidden gems', 'Group-friendly', 'Something unusual'],
-  },
-  {
-    key: 'crew',
-    eyebrow: 'Step 4',
-    title: 'Who is going?',
-    options: ['Solo', 'Couple', 'Small group', 'Mixed group', 'Not sure yet'],
-  },
-]
-
-const fallbackImage =
-  'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1200&q=85'
 
 function clampConfidence(value: number) {
   if (!Number.isFinite(value)) return 88
@@ -144,7 +100,7 @@ function sanitizeLiveEvent(event: BuzoEvent, fallback: BuzoEvent): BuzoEvent {
     socialProof: event.socialProof || fallback.socialProof,
     activitySignal: event.activitySignal || fallback.activitySignal,
     crowdSignal: event.crowdSignal || fallback.crowdSignal,
-    image: event.image || fallback.image || fallbackImage,
+    image: event.image || fallback.image || ASK_BUZO_FALLBACK_IMAGE,
     eventUrl: event.eventUrl?.startsWith('http') ? event.eventUrl : eventVerifyUrl(event.title ? event : fallback),
     legitimacyNote: eventLegitimacyNote(event),
     whyGo: event.whyGo?.length ? event.whyGo.slice(0, 4) : fallback.whyGo,
@@ -164,8 +120,8 @@ function buildJourneyPrompt(answers: JourneyAnswers, freeText?: string) {
 }
 
 function findFirstMissingStep(answers: JourneyAnswers) {
-  const index = journeySteps.findIndex((step) => !answers[step.key])
-  return index === -1 ? journeySteps.length - 1 : index
+  const index = ASK_BUZO_JOURNEY_STEPS.findIndex((step) => !answers[step.key])
+  return index === -1 ? ASK_BUZO_JOURNEY_STEPS.length - 1 : index
 }
 
 function inferJourneyAnswers(intent: string): JourneyAnswers {
@@ -590,7 +546,7 @@ export function App() {
   const [commitment, setCommitment] = useState<Commitment>('none')
   const [selectedEvent, setSelectedEvent] = useState<BuzoEvent | null>(null)
   const [openAIHealth, setOpenAIHealth] = useState<OpenAIHealth>('checking')
-  const [selectedModel, setSelectedModel] = useState(modelOptions[0].id)
+  const [selectedModel, setSelectedModel] = useState(ASK_BUZO_MODEL_OPTIONS[0]?.id ?? '')
   const [liveNotice, setLiveNotice] = useState<string | null>(null)
   const [journeyAnswers, setJourneyAnswers] = useState<JourneyAnswers>({})
   const [activeJourneyIndex, setActiveJourneyIndex] = useState(0)
@@ -604,15 +560,15 @@ export function App() {
   const canSubmit = inputValue.trim().length >= 3
 
   const currentPlan = useMemo(() => (result?.kind === 'plan' ? result.plan : null), [result])
-  const activeJourneyStep = journeySteps[activeJourneyIndex]
-  const completedJourneyCount = journeySteps.filter((step) => journeyAnswers[step.key]).length
-  const isJourneyComplete = completedJourneyCount === journeySteps.length
+  const activeJourneyStep = ASK_BUZO_JOURNEY_STEPS[activeJourneyIndex]
+  const completedJourneyCount = ASK_BUZO_JOURNEY_STEPS.filter((step) => journeyAnswers[step.key]).length
+  const isJourneyComplete = completedJourneyCount === ASK_BUZO_JOURNEY_STEPS.length
   const placeholder =
     isJourneyReplyPending
       ? 'Buzo is thinking...'
       : hasStartedJourney && !result && !isThinking && !isJourneyComplete && activeJourneyStep
       ? `Answer: ${activeJourneyStep.title.toLowerCase()}`
-      : defaultPlaceholder
+      : ASK_BUZO_DEFAULT_PLACEHOLDER
 
   useEffect(() => {
     let cancelled = false
@@ -746,7 +702,7 @@ export function App() {
     setInputValue('')
     setHasStartedJourney(true)
 
-    if (Object.keys(inferredAnswers).length === journeySteps.length) {
+    if (Object.keys(inferredAnswers).length === ASK_BUZO_JOURNEY_STEPS.length) {
       buildFromJourney(inferredAnswers, intent)
     }
 
@@ -761,7 +717,7 @@ export function App() {
     const nextAnswers = { ...journeyAnswers, [key]: value }
     setJourneyAnswers(nextAnswers)
 
-    const isComplete = journeySteps.every((step) => nextAnswers[step.key])
+    const isComplete = ASK_BUZO_JOURNEY_STEPS.every((step) => nextAnswers[step.key])
     setIsJourneyReplyPending(true)
 
     journeyDelayRef.current = window.setTimeout(() => {
@@ -804,7 +760,7 @@ export function App() {
                 onChange={(event) => setSelectedModel(event.target.value)}
                 aria-label="Select ChatGPT model"
               >
-                {modelOptions.map((model) => (
+                {ASK_BUZO_MODEL_OPTIONS.map((model) => (
                   <option key={model.id} value={model.id}>
                     {model.label}
                   </option>
@@ -897,7 +853,7 @@ export function App() {
                     : 'I’ll plan this like a proper event concierge. I’ll ask a few quick questions first, then use ChatGPT to build the live POC plan.'}
               </div>
 
-              {journeySteps.map((step, index) => {
+              {ASK_BUZO_JOURNEY_STEPS.map((step, index) => {
                 const answer = journeyAnswers[step.key]
                 const shouldShowQuestion = index === activeJourneyIndex && !isJourneyComplete
                 const shouldShowAnsweredQuestion = Boolean(answer)

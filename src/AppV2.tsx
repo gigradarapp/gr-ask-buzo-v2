@@ -13,29 +13,22 @@ import {
   Sun,
   User,
 } from 'lucide-react'
+import { ASK_BUZO_V2_BASE_PATH, ASK_BUZO_V2_PROMPTS } from './config/app'
 
 type Tab = 'discover' | 'ask' | 'plan' | 'favorites' | 'profile'
 
-const BASE_PATH = '/ask-buzo-v2'
-
-const ASK_PROMPTS = [
-  'any good jazz tonight near Tiong Bahru ?',
-  'best techno tonight in Marina Bay?',
-  'who is going to neon pulse tonight?',
-]
-
 function tabFromPath(pathname: string): Tab {
-  if (pathname === BASE_PATH || pathname === `${BASE_PATH}/` || pathname === `${BASE_PATH}/ask`) return 'ask'
-  if (pathname === `${BASE_PATH}/discover`) return 'discover'
-  if (pathname === `${BASE_PATH}/plan`) return 'plan'
-  if (pathname === `${BASE_PATH}/favorites`) return 'favorites'
-  if (pathname === `${BASE_PATH}/profile`) return 'profile'
+  if (pathname === ASK_BUZO_V2_BASE_PATH || pathname === `${ASK_BUZO_V2_BASE_PATH}/` || pathname === `${ASK_BUZO_V2_BASE_PATH}/ask`) return 'ask'
+  if (pathname === `${ASK_BUZO_V2_BASE_PATH}/discover`) return 'discover'
+  if (pathname === `${ASK_BUZO_V2_BASE_PATH}/plan`) return 'plan'
+  if (pathname === `${ASK_BUZO_V2_BASE_PATH}/favorites`) return 'favorites'
+  if (pathname === `${ASK_BUZO_V2_BASE_PATH}/profile`) return 'profile'
   return 'ask'
 }
 
 function pathForTab(tab: Tab): string {
-  if (tab === 'ask') return BASE_PATH
-  return `${BASE_PATH}/${tab}`
+  if (tab === 'ask') return ASK_BUZO_V2_BASE_PATH
+  return `${ASK_BUZO_V2_BASE_PATH}/${tab}`
 }
 
 export function AppV2() {
@@ -44,8 +37,8 @@ export function AppV2() {
 
   useEffect(() => {
     const pathname = window.location.pathname
-    if (!pathname.startsWith(BASE_PATH)) {
-      window.history.replaceState({}, '', BASE_PATH)
+    if (!pathname.startsWith(ASK_BUZO_V2_BASE_PATH)) {
+      window.history.replaceState({}, '', ASK_BUZO_V2_BASE_PATH)
       setTab('ask')
       return
     }
@@ -130,7 +123,7 @@ export function AppV2() {
                   <ChevronLeft size={16} aria-hidden />
                 </button>
                 <div className="v2-chip-strip" role="list" aria-label="Suggested prompts">
-                  {ASK_PROMPTS.map((item) => (
+              {ASK_BUZO_V2_PROMPTS.map((item) => (
                     <button key={item} type="button" role="listitem" className="v2-chip" onClick={() => setPrompt(item)}>
                       {item}
                     </button>
